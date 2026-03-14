@@ -1,6 +1,11 @@
+name: SBOM/SCA Scout
 ## Scan a docker image -> get a SARIF/SBOM report
 
-name: SBOM/SCA Scout
+env:
+  REGISTRY: ghcr.io
+  MAGE_NAME: ${{ github.repository }}
+  HA: ${{ github.event.pull_request.head.sha || github.event.after }}
+
 
 on:
   workflow_dispatch:
@@ -9,11 +14,6 @@ on:
           description: 'The Docker image to scan'
           required: true
           default: 'ghcr.io/metallaxis/byte-assemblers-go-game-engine:latest'
-
- env:
-   REGISTRY: ghcr.io
-   IMAGE_NAME: ${{ github.repository }}
-   SHA: ${{ github.event.pull_request.head.sha || github.event.after }}
 
 jobs:
   scout:
