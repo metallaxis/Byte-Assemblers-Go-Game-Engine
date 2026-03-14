@@ -10,10 +10,10 @@ on:
           required: true
           default: 'ghcr.io/metallaxis/byte-assemblers-go-game-engine:latest'
 
-# env:
-#   REGISTRY: ghcr.io
-#   IMAGE_NAME: ${{ github.repository }}
-#   SHA: ${{ github.event.pull_request.head.sha || github.event.after }}
+ env:
+   REGISTRY: ghcr.io
+   IMAGE_NAME: ${{ github.repository }}
+   SHA: ${{ github.event.pull_request.head.sha || github.event.after }}
 
 jobs:
   scout:
