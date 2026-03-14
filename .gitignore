@@ -1,0 +1,13 @@
+# Editor files
+.vscode/
+*.swp
+
+# Environment files
+goref.py
+.env
+
+# Build files
+build/
+obj/
+test/
+goteam*

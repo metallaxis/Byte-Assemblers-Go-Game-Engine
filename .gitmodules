@@ -1,0 +1,3 @@
+[submodule "goref"]
+	path = goref
+	url = https://github.com/progintro/goref.git
