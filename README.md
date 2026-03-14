@@ -270,4 +270,5 @@ Furthermore, the engine incorporates Liberty Prediction to penalize "Self-Atari"
 [Go Game](https://en.wikipedia.org/wiki/Go_(game))<br>
 [Go Rules](https://en.wikipedia.org/wiki/Rules_of_Go)<br>
 [Chinese Go Rules](https://www.cs.cmu.edu/~wjh/go/rules/Chinese.html)<br>
+Co-Authors Published Version - TO BE ADDED (When they make a copy of this repo in their public userprofile)
 [HW3 Webpage](https://progintro.github.io/assets/pdf/hw3.pdf)<br>
