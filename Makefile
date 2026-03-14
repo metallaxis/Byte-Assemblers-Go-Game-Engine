@@ -1,60 +1,148 @@
-## Short makefile to compile my Go engine
+# ============================================================
+#   C Cross-Platform Build System
+# ============================================================
 
-## You SHOULD NOT modify the parameters below
+# Default Compiler (will be set based on platform)
+CC = none
 
-## Compiler to use - do not change
-CC = gcc
+# Default Compiler Flags
+CFLAGS = none
 
-## Compiler flags - do not change
-CFLAGS = -static -Wall -Wextra -Werror -pedantic -O3
+# Default Platform (will be detected)
+PLATFORM = none
+ifeq ($(OS),Windows_NT)
+	PLATFORM = windows
+else
+	PLATFORM = linux
+endif
 
-## Linking flags - do not change
-LDFLAGS = $(CFLAGS)
+# Debug flag
+DEBUG = -g -DDEBUG=1
 
-## The name of the binary (executable) file - do not change
-TARGET ?= goteam
+# ------------------------------------------------------------
+# Include auto-generated dependency files
+-include $(OBJ_FILES:.o=.d)
 
-## Build the target by default
-all: $(TARGET)
+# ------------------------------------------------------------
+# General information
+INCLUDE_FLAGS = -Iinclude
 
-## You can change everything below to make your target compile,
-## link, clean or do anything else you'd like.
+# Linux-specific information
+LINUX_CC = gcc
+LINUX_CFLAGS = -O3 $(INCLUDE_FLAGS) -static -MMD -MP -Wall -Wextra -Werror -pedantic
+LINUX_LDFLAGS = $(LINUX_CFLAGS)
 
-# Include the header files
-CFLAGS += -Iinclude
+# Windows-specific information
+WINDOWS_CC = x86_64-w64-mingw32-gcc
+WINDOWS_CFLAGS = -O3 $(INCLUDE_FLAGS) -static -MMD -MP -Wall -Wextra -Werror -pedantic
+WINDOWS_LDFLAGS = $(WINDOWS_CFLAGS)
 
+# ------------------------------------------------------------
 # Project folders
-SRC = ./src
-INCLUDE_DIR = ./include
-BUILD_DIR = ./build
+SRC = src
+BIN_DIR = ./bin
 OBJ_DIR = ./obj
 
- # Project source files
-SRC_FILES = $(shell find $(SRC) -name '*.c')
-OBJ_FILES = $(patsubst $(SRC)/%.c,$(OBJ_DIR)/%.o,$(SRC_FILES))
+# ------------------------------------------------------------
+# Detect platform based on make command arguments
+ifneq (,$(findstring linux,$(MAKECMDGOALS)))
+PLATFORM := linux
+endif
 
-# Ensure build directory exists
-$(BUILD_DIR):
-	@mkdir -p $(BUILD_DIR)
+ifneq (,$(findstring windows,$(MAKECMDGOALS)))
+PLATFORM := windows
+endif
 
-$(OBJ_DIR):
+# ------------------------------------------------------------
+# Project source files
+SRC_FILES := $(shell find $(SRC) -name '*.c')
+OBJ_FILES := $(patsubst %.c,$(OBJ_DIR)/%.o,$(SRC_FILES))
+TARGET = $(BIN_DIR)/betago
+
+# ------------------------------------------------------------
+# Output binary name
+ifeq ($(PLATFORM), windows)
+	CC = $(WINDOWS_CC)
+	CFLAGS = $(WINDOWS_CFLAGS)
+	LDFLAGS = $(WINDOWS_LDFLAGS)
+	OUT = $(TARGET).exe
+else ifeq ($(PLATFORM), linux)
+	CC = $(LINUX_CC)
+	CFLAGS = $(LINUX_CFLAGS)
+	LDFLAGS = $(LINUX_LDFLAGS)
+	OUT = $(TARGET)
+endif
+
+# ------------------------------------------------------------
+# Default Platform (will be detected)
+default: $(OUT)
+
+# ------------------------------------------------------------
+# Help target: Display usage help
+help:
+	@echo "Usage:"
+	@echo "  make                               - Default Build for your operating system"
+	@echo "  make build linux|windows           - Build for your specified platform"
+	@echo "  make debug linux|windows           - Build with debug symbols for the engine"
+	@echo "  make run linux|windows             - Run the built program"
+	@echo "  make build --debug linux|windows   - Build with debug symbols for make"
+	@echo "  make debug --debug linux|windows   - Build with debug symbols for make and the engine"
+	@echo "  make run --debug linux|windows     - Run with debug symbols"
+	@echo "  make clean                         - Clean the build directory"
+
+# ------------------------------------------------------------
+# Ensure build directories exist
+check_dirs:
+	@mkdir -p $(BIN_DIR)
 	@mkdir -p $(OBJ_DIR)
 
-$(OBJ_DIR)/%.o: $(SRC)/%.c $(INCLUDE_DIR)/%.h | $(OBJ_DIR)
+# ------------------------------------------------------------
+$(OBJ_DIR)/%.o: %.c | check_dirs
+	@mkdir -p $(dir $@)
 	@echo "Compiling $< -> $@"
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(TARGET): $(OBJ_FILES)
-	@echo "Linking final executable: $(TARGET)"
-	$(CC) $(CFLAGS) $(OBJ_FILES) -o $(TARGET) $(LDFLAGS)
+# ------------------------------------------------------------
+$(OUT): $(OBJ_FILES) | check_dirs
+	@echo "Linking final executable: $(OUT)"
+	$(CC) $(CFLAGS) $(OBJ_FILES) -o $(OUT) $(LDFLAGS)
+	ln -s ../goref/goref.py $(BIN_DIR)/goref
 
+# ------------------------------------------------------------
+# Build target
+build: $(OUT)
+
+# ------------------------------------------------------------
+# Run target
+run: build
+ifeq ($(PLATFORM), windows)
+	@echo "Running application..."
+	@start "" "$(OUT)"
+else ifeq ($(PLATFORM), linux)
+	@echo "Running application..."
+	$(OUT)
+else
+	@echo "Specify a platform: make run linux or make run windows"
+endif
+
+# ------------------------------------------------------------
 # Clean target
 clean:
-	rm -rf $(BUILD_DIR)
+	@echo "Cleaning object and bin directories..."
 	rm -rf $(OBJ_DIR)
-	rm -f $(TARGET)
+	rm -rf $(BIN_DIR)
+	@mkdir -p $(OBJ_DIR)
+	@mkdir -p $(BIN_DIR)
+
+# ------------------------------------------------------------
+# Declare linux/windows as fake targets so make doesn’t fail
+.PHONY: linux windows
+linux:
+	@true
+windows:
+	@true
 
 # Debug flag
 .PHONY: debug
-debug: CFLAGS += -g
-debug: $(TARGET)
+debug: CFLAGS += DEBUG
+debug: $(OUT)
