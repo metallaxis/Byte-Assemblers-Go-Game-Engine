@@ -1,10 +1,11 @@
 FROM gcc:latest AS builder
-FROM alpine:3.21
 
 WORKDIR /engine
 
 COPY . .
 
 RUN make
+
+FROM alpine:3.21
 
 CMD ["bash"]
