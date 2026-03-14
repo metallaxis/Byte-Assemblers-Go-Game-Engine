@@ -1,11 +1,11 @@
-FROM gcc:latest AS builder
+FROM alpine
+
+RUN apk add gcc make git linux-headers musl-dev
 
 WORKDIR /engine
 
 COPY . .
 
 RUN make
-
-FROM alpine:3.21
 
 CMD ["bash"]
